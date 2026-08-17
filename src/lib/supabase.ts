@@ -362,3 +362,38 @@ export async function deleteUserFromSupabase(userId: string): Promise<void> {
     console.warn('Error deleting user profile from Supabase:', error.message);
   }
 }
+
+export async function verifySupabaseUserCredentials(usernameOrEmail: string, passwordAttempt: string): Promise<{ matched: boolean; user?: any }> {
+  const sb = getSupabaseClient();
+  if (!sb) return { matched: false };
+
+  const clean = usernameOrEmail.trim();
+  const { data, error } = await sb
+    .from('user_profiles')
+    .select('*')
+    .or(`username.ilike.${clean},email.ilike.${clean}`)
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    return { matched: false };
+  }
+
+  const row = data[0];
+  if (row.password && row.password === passwordAttempt) {
+    return {
+      matched: true,
+      user: {
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        fullName: row.full_name,
+        role: row.role || 'driver',
+        roleTitle: row.role_title || '',
+        avatar: row.avatar || '👤',
+        phoneNumber: row.phone_number || ''
+      }
+    };
+  }
+
+  return { matched: false };
+}

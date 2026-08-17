@@ -17,7 +17,8 @@ import {
   Database,
   User,
   Lock,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react';
 import { AppUser } from '../types';
 import { getRoleBadgeDetails } from '../utils/authManager';
@@ -33,6 +34,7 @@ export interface SidebarProps {
   onOpenDatabaseModal?: () => void;
   currentUser?: AppUser | null;
   onOpenAuthModal?: () => void;
+  onOpenUserManagement?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -45,7 +47,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onResetData,
   onOpenDatabaseModal,
   currentUser,
-  onOpenAuthModal
+  onOpenAuthModal,
+  onOpenUserManagement
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
   const roleDetails = currentUser ? getRoleBadgeDetails(currentUser.role) : null;
@@ -205,6 +208,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <PlusCircle className="w-4 h-4 text-blue-400" />
               <span>Thêm phương tiện mới</span>
             </button>
+
+            {currentUser?.role === 'admin' && onOpenUserManagement && (
+              <button
+                onClick={onOpenUserManagement}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-indigo-300 hover:bg-indigo-950/50 hover:text-white rounded-lg transition-colors"
+                title="Quản lý danh sách tài khoản & Đổi mật khẩu nhân sự"
+              >
+                <Users className="w-4 h-4 text-indigo-400" />
+                <span>QL Nhân sự & Phân quyền</span>
+              </button>
+            )}
 
             {onOpenDatabaseModal && (
               <button

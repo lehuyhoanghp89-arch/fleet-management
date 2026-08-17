@@ -584,6 +584,7 @@ export default function App() {
             setAuthNotice(undefined);
             setIsAuthModalOpen(true);
           }}
+          onOpenUserManagement={() => setIsUserManagementModalOpen(true)}
         />
       </div>
 
@@ -639,6 +640,10 @@ export default function App() {
                 setIsMobileMenuOpen(false);
                 setAuthNotice(undefined);
                 setIsAuthModalOpen(true);
+              }}
+              onOpenUserManagement={() => {
+                setIsMobileMenuOpen(false);
+                setIsUserManagementModalOpen(true);
               }}
             />
           </div>

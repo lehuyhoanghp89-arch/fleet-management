@@ -9,20 +9,15 @@ import {
   X, 
   AlertCircle, 
   ArrowRight, 
-  Info,
   Layers,
-  Sparkles,
-  ChevronRight,
   Users,
-  Settings
+  ShieldAlert
 } from 'lucide-react';
 import { AppUser, UserRole } from '../types';
 import { 
-  getAllUsers, 
   authenticateUser, 
   getPermissionsForRole, 
-  getRoleBadgeDetails,
-  PRESET_USERS
+  getRoleBadgeDetails
 } from '../utils/authManager';
 import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase';
 
@@ -45,7 +40,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   requiredPermissionNotice,
   onOpenUserManagement
 }) => {
-  const [activeTab, setActiveTab] = useState<'quick' | 'manual' | 'roles'>('quick');
+  const [activeTab, setActiveTab] = useState<'login' | 'roles'>('login');
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -55,17 +50,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   if (!isOpen) return null;
 
   const isSupabaseReady = isSupabaseConfigured();
-  const allUsers = getAllUsers();
-
-  const handleQuickLogin = (user: AppUser) => {
-    setLoginError(null);
-    onLogin(user);
-    setSuccessMessage(`Đăng nhập thành công với vai trò ${user.roleTitle}!`);
-    setTimeout(() => {
-      setSuccessMessage(null);
-      onClose();
-    }, 800);
-  };
 
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,8 +67,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // 1. Authenticate against local and synced database accounts
-      const authResult = authenticateUser(cleanUsername, cleanPassword);
+      // 1. Authenticate against database / local accounts
+      const authResult = await authenticateUser(cleanUsername, cleanPassword);
 
       if (authResult.success && authResult.user) {
         onLogin(authResult.user);
@@ -92,12 +76,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setTimeout(() => {
           setSuccessMessage(null);
           onClose();
-        }, 800);
+        }, 700);
         setIsSubmitting(false);
         return;
       }
 
-      // 2. If Supabase is configured and input looks like email, try Supabase native Auth
+      // 2. If Supabase is configured and input is an email, check Supabase native Auth as fallback
       if (isSupabaseReady && cleanUsername.includes('@')) {
         const sb = getSupabaseClient();
         if (sb) {
@@ -122,14 +106,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             setTimeout(() => {
               setSuccessMessage(null);
               onClose();
-            }, 800);
+            }, 700);
             setIsSubmitting(false);
             return;
           }
         }
       }
 
-      setLoginError(authResult.message || 'Tên đăng nhập hoặc mật khẩu không chính xác. Bạn có thể chọn nhanh tài khoản tại tab "Chọn nhanh vai trò".');
+      setLoginError(authResult.message || 'Tên đăng nhập hoặc mật khẩu không chính xác.');
     } catch (err: any) {
       setLoginError(err.message || 'Đã xảy ra lỗi khi xác thực.');
     } finally {
@@ -141,7 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -150,7 +134,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold">Xác thực & Phân quyền truy cập</h2>
-              <p className="text-xs text-slate-400">Hệ thống phân quyền Quản lý • Kỹ thuật • Tài xế</p>
+              <p className="text-xs text-slate-400">Đăng nhập tài khoản để thực hiện thao tác theo quyền hạn</p>
             </div>
           </div>
           <button 
@@ -163,23 +147,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Required Role Notice if triggered by unauthorized action */}
         {requiredPermissionNotice && (
-          <div className="px-6 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>{requiredPermissionNotice}</span>
+          <div className="px-6 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+            <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <div className="font-bold">Yêu cầu quyền truy cập:</div>
+              <div>{requiredPermissionNotice}</div>
+            </div>
           </div>
         )}
 
         {/* Current User Bar if logged in */}
-        {currentUser && (
-          <div className="px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        {currentUser ? (
+          <div className="px-6 py-3.5 bg-indigo-50/50 border-b border-indigo-100 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-lg shadow-inner">
+              <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xl shadow-xs">
                 {currentUser.avatar || '👤'}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-slate-800">{currentUser.fullName}</span>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${currentRoleDetails?.bg}`}>
+                  <span className="text-sm font-bold text-slate-900">{currentUser.fullName}</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${currentRoleDetails?.bg}`}>
                     {currentRoleDetails?.label}
                   </span>
                 </div>
@@ -194,52 +181,50 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     onClose();
                     onOpenUserManagement();
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition-colors"
-                  title="Mở bảng quản lý thêm tài khoản và đổi mật khẩu"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-2xs"
+                  title="Mở bảng quản lý tài khoản và phân quyền"
                 >
                   <Users className="w-3.5 h-3.5" />
-                  <span>Quản lý Tài Khoản & Mật Khẩu</span>
+                  <span>Quản Lý Nhân Sự & Phân Quyền</span>
                 </button>
               )}
 
               <button
                 onClick={() => {
                   onLogout();
-                  setSuccessMessage('Đã đăng xuất khỏi phiên làm việc.');
+                  setSuccessMessage('Đã đăng xuất khỏi tài khoản.');
                   setTimeout(() => setSuccessMessage(null), 1500);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition-colors"
+                title="Đăng xuất khỏi hệ thống"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Đăng xuất</span>
               </button>
             </div>
           </div>
+        ) : (
+          <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs text-slate-600">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span>Trạng thái: <strong>Khách vãng lai (Chỉ xem)</strong></span>
+            </div>
+            <span className="text-[11px] text-slate-400">Cần đăng nhập để chỉnh sửa dữ liệu</span>
+          </div>
         )}
 
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-200 bg-slate-50 px-6 pt-3 gap-2">
           <button
-            onClick={() => setActiveTab('quick')}
+            onClick={() => setActiveTab('login')}
             className={`px-4 py-2.5 text-xs font-bold rounded-t-lg transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'quick'
-                ? 'bg-white text-indigo-600 border-indigo-600 shadow-xs'
-                : 'text-slate-500 border-transparent hover:text-slate-700'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Chọn nhanh vai trò (1-Click)</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('manual')}
-            className={`px-4 py-2.5 text-xs font-bold rounded-t-lg transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'manual'
+              activeTab === 'login'
                 ? 'bg-white text-indigo-600 border-indigo-600 shadow-xs'
                 : 'text-slate-500 border-transparent hover:text-slate-700'
             }`}
           >
             <Key className="w-4 h-4" />
-            <span>Đăng nhập Username/Password</span>
+            <span>{currentUser ? 'Chuyển Đổi Tài Khoản' : 'Đăng Nhập'}</span>
           </button>
           <button
             onClick={() => setActiveTab('roles')}
@@ -271,73 +256,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* TAB 1: QUICK 1-CLICK PRESET ROLES */}
-          {activeTab === 'quick' && (
-            <div className="space-y-3">
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Chọn một tài khoản tương ứng với vai trò của bạn để kiểm thử phân quyền ngay lập tức:
-              </p>
-
-              <div className="grid grid-cols-1 gap-2.5">
-                {allUsers.map((user) => {
-                  const isSelected = currentUser?.id === user.id;
-                  const roleDet = getRoleBadgeDetails(user.role);
-                  const pwdDisplay = user.password || (PRESET_USERS.find(p => p.id === user.id)?.passwordHint) || '123456';
-
-                  return (
-                    <div
-                      key={user.id}
-                      onClick={() => handleQuickLogin(user)}
-                      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group ${
-                        isSelected
-                          ? 'bg-indigo-50/70 border-indigo-300 ring-2 ring-indigo-500/20'
-                          : 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-slate-50/80 shadow-xs'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
-                          {user.avatar || '👤'}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-800 text-sm">{user.fullName}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${roleDet.bg}`}>
-                              {roleDet.label}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-                            {roleDet.desc}
-                          </p>
-                          <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                            username: <span className="font-semibold text-slate-700">{user.username}</span> • pass: <span className="font-semibold text-indigo-600">{pwdDisplay}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {isSelected ? (
-                          <span className="px-2.5 py-1 bg-indigo-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5" /> Đang dùng
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="px-3 py-1.5 bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white text-slate-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
-                          >
-                            <span>Đăng nhập</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: MANUAL USERNAME & PASSWORD FORM */}
-          {activeTab === 'manual' && (
+          {/* TAB 1: USERNAME & PASSWORD FORM */}
+          {activeTab === 'login' && (
             <form onSubmit={handleManualSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -352,7 +272,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     required
                     value={usernameInput}
                     onChange={(e) => setUsernameInput(e.target.value)}
-                    placeholder="ví dụ: admin, kythuat, hoặc email của bạn"
+                    placeholder="Nhập tên đăng nhập hoặc email..."
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-xl text-sm transition-all font-mono"
                   />
                 </div>
@@ -377,17 +297,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1 text-slate-600">
-                <div className="font-semibold text-slate-800 flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Danh sách tài khoản mặc định kèm mật khẩu:</span>
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 space-y-1">
+                <div className="font-semibold text-slate-700 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Bảo mật hệ thống:</span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-[11px] pt-1">
-                  <div>• Admin: <span className="font-bold text-slate-800">admin</span> / <span className="text-indigo-600 font-bold">admin123</span></div>
-                  <div>• Kỹ thuật: <span className="font-bold text-slate-800">kythuat</span> / <span className="text-indigo-600 font-bold">tech123</span></div>
-                  <div>• Lái xe: <span className="font-bold text-slate-800">taixe</span> / <span className="text-indigo-600 font-bold">driver123</span></div>
-                  <div>• Khách xem: <span className="font-bold text-slate-800">khach</span> / <span className="text-indigo-600 font-bold">guest123</span></div>
-                </div>
+                <p>
+                  Chỉ người dùng có tài khoản và mật khẩu hợp lệ do Quản trị viên (Admin) cấp mới có quyền chỉnh sửa, nhập ODO, xóa xe và quản trị dữ liệu.
+                </p>
               </div>
 
               <button
@@ -396,10 +313,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
                 {isSubmitting ? (
-                  <span>Đang xác thực...</span>
+                  <span>Đang kiểm tra thông tin...</span>
                 ) : (
                   <>
-                    <span>Đăng nhập hệ thống</span>
+                    <span>Đăng Nhập Vào Hệ Thống</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -407,16 +324,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </form>
           )}
 
-          {/* TAB 3: ROLE PERMISSION MATRIX */}
+          {/* TAB 2: ROLE PERMISSION MATRIX */}
           {activeTab === 'roles' && (
             <div className="space-y-4 text-xs">
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
                 <table className="w-full text-left divide-y divide-slate-200">
                   <thead className="bg-slate-100 text-slate-700 font-bold text-[11px]">
                     <tr>
                       <th className="p-2.5">Quyền hạn / Chức năng</th>
-                      <th className="p-2.5 text-center text-indigo-700">Quản trị viên</th>
-                      <th className="p-2.5 text-center text-blue-700">Kỹ thuật viên</th>
+                      <th className="p-2.5 text-center text-indigo-700">Admin</th>
+                      <th className="p-2.5 text-center text-blue-700">Kỹ thuật</th>
                       <th className="p-2.5 text-center text-emerald-700">Tài xế / Khách</th>
                     </tr>
                   </thead>
@@ -452,10 +369,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <td className="p-2.5 text-center text-rose-500 font-bold">✗ Khóa</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-medium">Xóa xe / Xóa nhật ký / Reset dữ liệu</td>
+                      <td className="p-2.5 font-medium">Xóa xe / Reset dữ liệu / Cấu hình CSDL</td>
                       <td className="p-2.5 text-center text-emerald-600 font-bold">✓ Có</td>
                       <td className="p-2.5 text-center text-rose-500 font-bold">✗ Khóa</td>
                       <td className="p-2.5 text-center text-rose-500 font-bold">✗ Khóa</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-medium">Xem lịch, bảng kê, AI Fleet Advisor</td>
+                      <td className="p-2.5 text-center text-emerald-600 font-bold">✓ Có</td>
+                      <td className="p-2.5 text-center text-emerald-600 font-bold">✓ Có</td>
+                      <td className="p-2.5 text-center text-emerald-600 font-bold">✓ Có</td>
                     </tr>
                   </tbody>
                 </table>
@@ -467,7 +390,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Footer */}
         <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <span className="text-xs text-slate-500">
-            {currentUser ? `Đang đăng nhập: ${currentUser.fullName}` : 'Chưa đăng nhập (Chế độ xem mặc định)'}
+            {currentUser ? `Đang đăng nhập: ${currentUser.fullName}` : 'Chế độ xem: Khách vãng lai'}
           </span>
           <button
             onClick={onClose}

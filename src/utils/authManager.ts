@@ -4,7 +4,8 @@ import {
   isSupabaseConfigured, 
   fetchUsersFromSupabase, 
   upsertUserToSupabase, 
-  deleteUserFromSupabase 
+  deleteUserFromSupabase,
+  verifySupabaseUserCredentials
 } from '../lib/supabase';
 
 export const PRESET_USERS: (AppUser & { passwordHint: string })[] = [
@@ -59,7 +60,23 @@ export const PRESET_USERS: (AppUser & { passwordHint: string })[] = [
   }
 ];
 
-export function getPermissionsForRole(role: UserRole): UserPermissions {
+export function getPermissionsForRole(role: UserRole | null | undefined): UserPermissions {
+  if (!role) {
+    // Unauthenticated Guest: Strictly Read-Only
+    return {
+      canAddVehicle: false,
+      canEditVehicle: false,
+      canDeleteVehicle: false,
+      canInputOdo: false,
+      canCompleteService: false,
+      canUpdateCompliance: false,
+      canExportReports: true,
+      canManageDatabase: false,
+      canResetData: false,
+      isReadOnly: true
+    };
+  }
+
   switch (role) {
     case 'admin':
       return {
@@ -105,8 +122,8 @@ export function getPermissionsForRole(role: UserRole): UserPermissions {
   }
 }
 
-const AUTH_STORAGE_KEY = 'fleet_current_user_v2';
-const USERS_LIST_STORAGE_KEY = 'fleet_user_accounts_v2';
+const AUTH_STORAGE_KEY = 'fleet_current_user_v3';
+const USERS_LIST_STORAGE_KEY = 'fleet_user_accounts_v3';
 
 export function getAllUsers(): AppUser[] {
   try {
@@ -135,19 +152,23 @@ export function saveAllUsers(users: AppUser[]): void {
   }
 }
 
+/**
+ * Returns currently logged in user from LocalStorage session.
+ * CRITICAL SECURITY FIX:
+ * If there is NO stored session (e.g. new visitor, shared Vercel link, incognito),
+ * return NULL (Guest / Read-only). NEVER default to Admin!
+ */
 export function getStoredUser(): AppUser | null {
   try {
     const raw = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!raw) {
-      // Default to first user (Admin) for seamless experience
-      const all = getAllUsers();
-      const admin = all.find(u => u.role === 'admin') || all[0];
-      return admin;
+      // New visitor is NOT logged in (Guest / Read-only)
+      return null;
     }
     return JSON.parse(raw);
   } catch (err) {
-    console.error('Error loading stored user:', err);
-    return PRESET_USERS[0];
+    console.error('Error loading stored user session:', err);
+    return null;
   }
 }
 
@@ -163,10 +184,30 @@ export function saveStoredUser(user: AppUser | null): void {
   }
 }
 
-export function authenticateUser(usernameOrEmail: string, passwordAttempt: string): { success: boolean; user?: AppUser; message?: string } {
-  const users = getAllUsers();
+export async function authenticateUser(usernameOrEmail: string, passwordAttempt: string): Promise<{ success: boolean; user?: AppUser; message?: string }> {
   const cleanInput = usernameOrEmail.trim().toLowerCase();
-  
+  const cleanPassword = passwordAttempt.trim();
+
+  // 1. If Supabase is configured, check directly with Supabase user_profiles
+  if (isSupabaseConfigured()) {
+    try {
+      const res = await verifySupabaseUserCredentials(cleanInput, cleanPassword);
+      if (res.matched && res.user) {
+        // Also update local users cache
+        const localUsers = getAllUsers();
+        const exists = localUsers.some(u => u.id === res.user.id);
+        if (!exists) {
+          saveAllUsers([...localUsers, res.user]);
+        }
+        return { success: true, user: res.user };
+      }
+    } catch (e) {
+      console.warn('Error verifying credentials with Supabase:', e);
+    }
+  }
+
+  // 2. Check locally stored accounts
+  const users = getAllUsers();
   const found = users.find(u => 
     u.username.toLowerCase() === cleanInput || 
     u.email.toLowerCase() === cleanInput
@@ -179,8 +220,8 @@ export function authenticateUser(usernameOrEmail: string, passwordAttempt: strin
   // Check password
   const expectedPassword = found.password || (PRESET_USERS.find(p => p.id === found.id)?.passwordHint) || '123456';
   
-  if (passwordAttempt !== expectedPassword) {
-    return { success: false, message: 'Mật khẩu không chính xác. Vui lòng thử lại.' };
+  if (cleanPassword !== expectedPassword) {
+    return { success: false, message: 'Mật khẩu không chính xác. Vui lòng kiểm tra lại.' };
   }
 
   return { success: true, user: found };
@@ -263,7 +304,16 @@ export async function deleteUserAccount(userId: string): Promise<boolean> {
   return true;
 }
 
-export function getRoleBadgeDetails(role: UserRole) {
+export function getRoleBadgeDetails(role: UserRole | null | undefined) {
+  if (!role) {
+    return {
+      label: 'Khách (Chỉ xem)',
+      bg: 'bg-slate-100 text-slate-700 border-slate-200',
+      badge: 'bg-slate-500 text-white',
+      desc: 'Chưa đăng nhập. Bạn có quyền xem tổng quan dữ liệu xe và báo cáo.'
+    };
+  }
+
   switch (role) {
     case 'admin':
       return {
