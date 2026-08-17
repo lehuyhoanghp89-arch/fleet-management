@@ -1,0 +1,6 @@
+{
+  "name": "Quản Lý & Dự Toán Bảo Dưỡng Đội Xe",
+  "description": "Hệ thống quản lý bảo dưỡng đa hãng (Mercedes-Benz, Ford, Kia, Hyundai), tính toán cấp bảo dưỡng tương lai theo ODO, quản lý hạn đăng kiểm & bảo hiểm xe, lịch trình vận hành và hồ sơ kỹ thuật toàn đội.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
