@@ -593,19 +593,10 @@ export default function App() {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div 
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="relative flex flex-col w-72 max-w-full bg-[#0F172A] z-10">
-            <div className="flex items-center justify-between p-4 border-b border-slate-800">
-              <span className="font-bold text-white text-lg">Menu Điều Hướng</span>
-              <button 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+          <div className="relative flex flex-col w-72 max-w-[85vw] h-full max-h-screen bg-[#0F172A] z-10 shadow-2xl overflow-hidden animate-in slide-in-from-left duration-200">
             <Sidebar
               currentTab={currentTab}
               setCurrentTab={(tab) => {
@@ -646,6 +637,7 @@ export default function App() {
                 setIsMobileMenuOpen(false);
                 setIsUserManagementModalOpen(true);
               }}
+              onClose={() => setIsMobileMenuOpen(false)}
             />
           </div>
         </div>
