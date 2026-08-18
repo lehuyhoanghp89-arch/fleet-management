@@ -58,47 +58,65 @@ export const Navbar: React.FC<NavbarProps> = ({
   const getPageTitle = () => {
     switch (currentTab) {
       case 'calendar':
-        return 'Lịch Trình Vận Hành & Bảo Dưỡng (Tháng / Năm)';
+        return 'Lịch Trình Vận Hành & Bảo Dưỡng';
       case 'compliance':
-        return 'Quản Lý Hạn Đăng Kiểm & Hợp Đồng Bảo Hiểm Xe';
+        return 'Quản Lý Đăng Kiểm & Bảo Hiểm Xe';
       case 'specs':
-        return 'Hồ Sơ Kỹ Thuật & Thông Tin Toàn Bộ Đội Xe';
+        return 'Hồ Sơ Kỹ Thuật Đội Xe';
       case 'budget':
-        return 'Dự Toán Ngân Sách & Lịch Sử Bảo Dưỡng';
+        return 'Dự Toán Ngân Sách Bảo Dưỡng';
       case 'manuals':
-        return 'Sổ Tay Kỹ Thuật & Danh Mục Phụ Tùng OEM';
+        return 'Sổ Tay & Phụ Tùng OEM';
       default:
-        return 'Dự Toán Bảo Dưỡng Đội Xe Theo ODO';
+        return 'Dự Toán Bảo Dưỡng Đội Xe';
+    }
+  };
+
+  const getMobileShortTitle = () => {
+    switch (currentTab) {
+      case 'calendar':
+        return 'Lịch Bảo Dưỡng';
+      case 'compliance':
+        return 'Đăng Kiểm & BH';
+      case 'specs':
+        return 'Hồ Sơ Kỹ Thuật';
+      case 'budget':
+        return 'Dự Toán Chi Phí';
+      case 'manuals':
+        return 'Sổ Tay OEM';
+      default:
+        return 'Đội Xe ODO';
     }
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 shrink-0 sticky top-0 z-10">
+    <header className="h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-6 lg:px-8 shrink-0 sticky top-0 z-20">
       
       {/* Left: Mobile Menu button & Page Title */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {onToggleMobileMenu && (
           <button
             onClick={onToggleMobileMenu}
-            className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+            className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors shrink-0"
             aria-label="Toggle navigation menu"
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         )}
 
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg sm:text-xl font-semibold text-slate-800 italic">
-            {getPageTitle()}
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <h1 className="text-sm sm:text-base lg:text-lg font-bold text-slate-800 truncate">
+            <span className="hidden sm:inline italic">{getPageTitle()}</span>
+            <span className="sm:hidden">{getMobileShortTitle()}</span>
           </h1>
-          <span className="hidden sm:inline text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-sans not-italic">
+          <span className="text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
             {vehiclesCount} Xe
           </span>
         </div>
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {onOpenDatabaseModal && (
           <button
             onClick={onOpenDatabaseModal}
@@ -116,11 +134,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={onOpenAiAdvisor}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold transition-colors"
+          className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold transition-colors"
           title="Tư vấn phụ tùng và cấp bảo dưỡng bằng AI"
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>Cố Vấn AI</span>
+          <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <span className="hidden sm:inline">Cố Vấn AI</span>
+          <span className="sm:hidden">AI</span>
         </button>
 
         <button
@@ -134,9 +153,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={onOpenOdoModal}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold shadow-sm flex items-center gap-1.5 transition-colors"
+          className="hidden sm:flex bg-blue-600 hover:bg-blue-700 text-white px-3.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold shadow-sm items-center gap-1.5 transition-colors"
         >
-          <span>+ Nhập Số KM Mới</span>
+          <span>+ Nhập ODO</span>
         </button>
 
         {currentUser?.role === 'admin' && onOpenUserManagement && (
@@ -153,16 +172,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         {onOpenAuthModal && (
           <button
             onClick={onOpenAuthModal}
-            className={`flex items-center gap-2 pl-2 pr-2.5 py-1.5 border rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 border rounded-lg text-xs font-semibold transition-all ${
               currentUser
-                ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-800'
-                : 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100 text-indigo-700'
+                ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 active:bg-slate-200 text-slate-800'
+                : 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700'
             }`}
             title="Quản lý tài khoản & phân quyền truy cập"
           >
             {currentUser ? (
               <>
-                <span className="text-base leading-none">{currentUser.avatar || '👤'}</span>
+                <span className="text-sm sm:text-base leading-none">{currentUser.avatar || '👤'}</span>
                 <span className="hidden xl:inline max-w-[120px] truncate">{currentUser.fullName}</span>
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${roleDetails?.bg}`}>
                   {roleDetails?.label}
@@ -171,7 +190,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <>
                 <Lock className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Đăng nhập</span>
+                <span className="hidden sm:inline">Đăng nhập</span>
+                <span className="sm:hidden text-[11px]">Đ.Nhập</span>
               </>
             )}
           </button>

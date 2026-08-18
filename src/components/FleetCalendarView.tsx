@@ -185,49 +185,52 @@ export const FleetCalendarView: React.FC<FleetCalendarViewProps> = ({
     <div className="space-y-6">
       
       {/* Top Banner (#0F172A Professional Polish) */}
-      <div className="p-6 bg-[#0F172A] text-white rounded-2xl border border-slate-700 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 sm:p-6 bg-[#0F172A] text-white rounded-2xl border border-slate-700 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
           <div>
             <div className="flex items-center space-x-2">
-              <CalendarIcon className="w-6 h-6 text-blue-400" />
-              <h2 className="text-xl font-bold text-white tracking-tight">
-                Lịch Trình Vận Hành, Bảo Dưỡng & Pháp Lý Đội Xe
+              <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 shrink-0" />
+              <h2 className="text-base sm:text-xl font-bold text-white tracking-tight">
+                Lịch Trình Vận Hành & Bảo Dưỡng
               </h2>
             </div>
-            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
               Trực quan hóa lịch trình theo Gantt Timeline, Lịch Tháng và Ma trận Cả Năm: Dự báo chính xác thời điểm xe cần vào xưởng bảo dưỡng, hạn đăng kiểm và gia hạn bảo hiểm.
             </p>
           </div>
 
           {/* Mode Switcher */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center text-xs">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none shrink-0">
+            <div className="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center text-xs shrink-0">
               <button
                 onClick={() => setViewMode('gantt')}
-                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap min-h-[34px] ${
                   viewMode === 'gantt' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-300 hover:text-white'
                 }`}
               >
-                <BarChart3 className="w-4 h-4" />
-                <span>Timeline Gantt Chart</span>
+                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Timeline Gantt Chart</span>
+                <span className="sm:hidden">Gantt</span>
               </button>
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap min-h-[34px] ${
                   viewMode === 'month' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'
                 }`}
               >
-                <CalendarDays className="w-4 h-4" />
-                <span>Xem Theo Tháng</span>
+                <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Xem Theo Tháng</span>
+                <span className="sm:hidden">Tháng</span>
               </button>
               <button
                 onClick={() => setViewMode('year')}
-                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap min-h-[34px] ${
                   viewMode === 'year' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'
                 }`}
               >
-                <Grid className="w-4 h-4" />
-                <span>Xem Cả Năm {year}</span>
+                <Grid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Xem Cả Năm {year}</span>
+                <span className="sm:hidden">Năm {year}</span>
               </button>
             </div>
           </div>

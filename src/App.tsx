@@ -74,6 +74,7 @@ import { CompleteServiceModal } from './components/CompleteServiceModal';
 import { DatabaseConfigModal } from './components/DatabaseConfigModal';
 import { AuthModal } from './components/AuthModal';
 import { UserManagementModal } from './components/UserManagementModal';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 export default function App() {
   // Local storage persistence
@@ -675,7 +676,7 @@ export default function App() {
         />
 
         {/* Scrollable Main Content Section */}
-        <section className="p-4 sm:p-6 space-y-6 flex-1 overflow-y-auto">
+        <section className="p-3 sm:p-6 space-y-4 sm:space-y-6 flex-1 overflow-y-auto pb-24 md:pb-6">
           
           {/* TAB 1: FLEET OVERVIEW */}
           {currentTab === 'fleet' && (
@@ -1027,6 +1028,15 @@ export default function App() {
           const fresh = getStoredUser();
           setCurrentUser(fresh);
         }}
+      />
+
+      {/* Mobile Floating Bottom Navigation Bar */}
+      <MobileBottomNav
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        onOpenOdoModal={() => handleOpenOdoModal()}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        currentUser={currentUser}
       />
 
     </div>
