@@ -381,10 +381,43 @@ export default function App() {
 
   const handleDeleteLog = (logId: string) => {
     requirePermission('canInputOdo', 'Xóa nhật ký ODO', () => {
-      const updated = logs.filter((l) => l.id !== logId);
-      setLogs(updated);
+      const targetLog = logs.find(l => l.id === logId);
+      const updatedLogs = logs.filter((l) => l.id !== logId);
+      setLogs(updatedLogs);
+      
       if (isSupabaseConfigured()) {
         deleteOdoLogFromSupabase(logId).catch(console.error);
+      }
+
+      if (targetLog) {
+        // Re-calculate the vehicle's currentOdo from the remaining logs
+        const vehicleRemainingLogs = updatedLogs
+          .filter(l => l.vehicleId === targetLog.vehicleId)
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() || b.odo - a.odo);
+
+        const currentVeh = vehicles.find(v => v.id === targetLog.vehicleId);
+        if (currentVeh) {
+          const restoredOdo = vehicleRemainingLogs.length > 0
+            ? vehicleRemainingLogs[0].odo
+            : (currentVeh.initialOdo || currentVeh.lastServiceOdo || 0);
+
+          const updatedVehicles = vehicles.map(v => 
+            v.id === targetLog.vehicleId ? { ...v, currentOdo: restoredOdo } : v
+          );
+          setVehicles(updatedVehicles);
+
+          if (selectedDetailVehicle && selectedDetailVehicle.id === targetLog.vehicleId) {
+            setSelectedDetailVehicle({
+              ...selectedDetailVehicle,
+              currentOdo: restoredOdo
+            });
+          }
+
+          if (isSupabaseConfigured()) {
+            const updatedVeh = updatedVehicles.find(v => v.id === targetLog.vehicleId);
+            if (updatedVeh) upsertVehicleToSupabase(updatedVeh).catch(console.error);
+          }
+        }
       }
     });
   };

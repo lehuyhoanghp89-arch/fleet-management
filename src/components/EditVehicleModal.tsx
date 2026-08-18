@@ -87,6 +87,7 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
       driverName: (formData.driverName || '').trim(),
       driverPhone: (formData.driverPhone || '').trim(),
       notes: (formData.notes || '').trim(),
+      currentOdo: formData.currentOdo !== undefined ? Number(formData.currentOdo) : vehicle.currentOdo,
       baseCycleKm: Number(formData.baseCycleKm) || vehicle.baseCycleKm || 5000,
       inspectionExpiryDate: formData.inspectionExpiryDate || undefined,
       inspectionStation: formData.inspectionStation || undefined,
@@ -325,6 +326,25 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
                     <option value="maintenance_due">Đến hạn bảo dưỡng</option>
                     <option value="overdue">Đã quá hạn bảo dưỡng</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Số ODO hiện tại (km)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.currentOdo !== undefined ? formData.currentOdo : vehicle.currentOdo}
+                    onChange={(e) => handleChange('currentOdo', Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg font-mono font-bold text-slate-900 focus:outline-hidden focus:border-blue-500"
+                    placeholder="VD: 38450"
+                  />
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  <p className="font-semibold text-slate-700">Hiệu chỉnh số ODO công tơ mét:</p>
+                  <p>Bạn có thể sửa trực tiếp số km tại đây nếu nhập nhầm hoặc xóa lần nhập sai trong thẻ <strong>Nhật ký ODO</strong> của xe.</p>
                 </div>
               </div>
             </div>
